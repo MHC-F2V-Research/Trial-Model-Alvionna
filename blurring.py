@@ -73,7 +73,7 @@ plt.show()
 
 #cv2.medianBlur(src, dst, ksize)
     # ksize => aperture linear size, must be ODD number and greater than 0
-median = cv.medianBlur(img,5) # added 50% noise to the original image
+median = cv2.medianBlur(img,5) # added 50% noise to the original image
 
 plt.subplot(121),plt.imshow(img),plt.title('Original')
 plt.xticks([]), plt.yticks([])
@@ -91,7 +91,7 @@ plt.show()
     # sigmaSpace => filter sigma in the coordinate space.
         # the larger the value, the farther pixels will influence each other as long as their colors are close enough # when d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
-bilateral = cv.bilateralFilter(img,9,75,75)
+bilateral = cv2.bilateralFilter(img,9,75,75)
 
 plt.subplot(121),plt.imshow(img),plt.title('Original')
 plt.xticks([]), plt.yticks([])
