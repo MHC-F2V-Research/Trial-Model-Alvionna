@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 #######################
 # SKIMAGE WAY
 #######################
-# # get filename and kernel size from command line
+# get filename and kernel size from command line
 # filename = sys.argv[1]
 # sigma = float(sys.argv[2])
 
@@ -40,7 +40,7 @@ img = cv2.imread('kinova_color_images/myframe000320.png')
 #cv2.blur(img, kernel_size, dst, anchor, borderType)
     # dst => the output image of the same size and type as src.
     # anchor => an integer representing anchor point and it’s default value point is (-1, -1) -> the anchor is at the kernel center.
-blur_average = cv2.blur(img,(5,5))
+blur_average = cv2.blur(img,(30,30))
 
 plt.subplot(121),plt.imshow(img),plt.title('Original')
 plt.xticks([]), plt.yticks([])
@@ -51,16 +51,16 @@ plt.show()
 ### gaussian blurring -> using gaussian kernel
 
 #cv2.GaussianBlur(src, dst, ksize, sigmaX, sigmaY, borderType=BORDER_DEFAULT)
-    # ksize => kernel size, must be a tuple (width, height)
+    # ksize => kernel size, must be a tuple (width, height), must be ODD numbers
     # sigmaX => kernel standard deviation along X-axis (a double)
     # sigmaY => kernel standard deviation along Y-axis (a double)
 
 #we can create our own gaussian kernel by using
-    #cv2.GaussianKernel(ksize, sigma, ktype)
+    #cv2.GaussianKernel(src, ksize, sigma, ktype)
         # ksize => aperture linear size, must be ODD number and greater than 0
         # sigma => gaussian standard deviation
         # ktype => type of filter coefficients, it can be CV_32F or CV_64F (default)
-blur_gaussian = cv2.GaussianBlur(img,(5,5), 0.1, 0.2)
+blur_gaussian = cv2.GaussianBlur(img,(51,51), 10.0, 10.0)
 
 plt.subplot(121),plt.imshow(img),plt.title('Original')
 plt.xticks([]), plt.yticks([])
@@ -73,7 +73,7 @@ plt.show()
 
 #cv2.medianBlur(src, dst, ksize)
     # ksize => aperture linear size, must be ODD number and greater than 0
-median = cv2.medianBlur(img,5) # added 50% noise to the original image
+median = cv2.medianBlur(img,41)
 
 plt.subplot(121),plt.imshow(img),plt.title('Original')
 plt.xticks([]), plt.yticks([])
@@ -91,7 +91,7 @@ plt.show()
     # sigmaSpace => filter sigma in the coordinate space.
         # the larger the value, the farther pixels will influence each other as long as their colors are close enough # when d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
-bilateral = cv2.bilateralFilter(img,9,75,75)
+bilateral = cv2.bilateralFilter(img,50,100,100)
 
 plt.subplot(121),plt.imshow(img),plt.title('Original')
 plt.xticks([]), plt.yticks([])
