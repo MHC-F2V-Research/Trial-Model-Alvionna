@@ -6,7 +6,7 @@
 import skimage
 from skimage.viewer import ImageViewer
 import sys
-# import cv2
+import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
