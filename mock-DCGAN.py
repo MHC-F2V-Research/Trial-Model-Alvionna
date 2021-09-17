@@ -63,6 +63,7 @@ beta1 = 0.5
 # Number of GPUs available. Use 0 for CPU mode.
 ngpu = 1
 
+
 # We can use an image folder dataset the way we have it setup.
 # Create the dataset
 #dataset = dset.ImageFolder(root=dataroot,
@@ -82,7 +83,10 @@ training_data=dset.FashionMNIST(
 	train=True,
 	download=True,
 	transform=transforms.ToTensor()
+	#transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 )
+
+mnist_dim = training_data.train_data.size(1) * training_data.train_data.size(2)
 
 train_dataloader= torch.utils.data.DataLoader(training_data,batch_size=batch_size,shuffle=True,num_workers=workers)
 
@@ -237,7 +241,7 @@ print("Starting Training Loop...")
 # For each epoch
 for epoch in range(num_epochs):
     # For each batch in the dataloader
-    for i, data in enumerate(train_dataloader, 0):
+    for i, data in enumerate(train_dataloader, 0): #(iterable, start index)
 
         ############################
         # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -249,7 +253,7 @@ for epoch in range(num_epochs):
         b_size = real_cpu.size(0)
         label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
         # Forward pass real batch through D
-        output = netD(real_cpu).view(-1)
+        output = netD(real_cpu).view(-1, mnist_dim)
         # Calculate loss on all-real batch
         errorD_real = loss_function(output, label)
         # Calculate gradients for D in backward pass
@@ -263,7 +267,7 @@ for epoch in range(num_epochs):
         fake = netG(noise)
         label.fill_(fake_label)
         # Classify all fake batch with D
-        output = netD(fake.detach()).view(-1)
+        output = netD(fake.detach()).view(-1, mnist_dim)
         # Calculate D's loss on the all-fake batch
         errorD_fake = loss_function(output, label)
         # Calculate the gradients for this batch, summed with previous gradients
@@ -277,37 +281,17 @@ for epoch in range(num_epochs):
         ############################
         # (2) Update G network: maximize log(D(G(z)))
         ##########################
-	##Train with all-real batch
-        netD.zero_grad()
-        # Format batch
-        real_cpu = data[0].to(device)
-        b_size = real_cpu.size(0)
-        label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
-        # Forward pass real batch through D
-        output = netD(real_cpu).view(-1)
-        # Calculate loss on all-real batch
-        errorD_real = loss_function(output, label)
-        # Calculate gradients for D in backward pass
-        errorD_real.backward()
-        D_x = output.mean().item()
-
-        ## Train with all-fake batch
-        # Generate batch of latent vectors
-        noise = torch.randn(b_size, size_z, 1, 1, device=device)
-        # Generate fake image batch with G
-        fake = netG(noise)
-        label.fill_(fake_label)
-        # Classify all fake batch with D
-        output = netD(fake.detach()).view(-1)
-        # Calculate D's loss on the all-fake batch
-        errorD_fake = loss_function(output, label)
-        # Calculate the gradients for this batch, summed with previous gradients
-        errorD_fake.backward()
-        D_G_z1 = output.mean().item()
-        # Compute error of D as sum over the fake and the real batches
-        D_error = errorD_real + errorD_fake
-        # Update D
-        optimizerD.step()
+        netG.zero_grad()
+        label.fill_(real_label)  # fake labels are real for generator cost
+        # Since we just updated D, perform another forward pass of all-fake batch through D
+        output = netD(fake).view(-1, mnist_dim)
+        # Calculate G's loss based on this output
+        G_error = loss_function(output, label)
+        # Calculate gradients for G
+        G_error.backward()
+        D_G_z2 = output.mean().item()
+        # Update G
+        optimizerG.step()
 
         # Output training stats
         if i % 50 == 0:
