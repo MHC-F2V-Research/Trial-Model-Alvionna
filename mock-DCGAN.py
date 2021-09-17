@@ -309,50 +309,6 @@ for epoch in range(num_epochs):
         # Update D
         optimizerD.step()
 
-        ############################
-        # (2) Update G network: maximize log(D(G(z)))
-        ###########################
-        netG.zero_grad()
-        label.fill_(real_label)  # fake labels are real for generator cost
-        # Since we just updated D, perform another forward pass of all-fake batch through D
-        output = netD(fake).view(-1)
-        # Calculate G's loss based on this output
-        G_error = loss_function(output, label)
-        # Calculate gradients for G
-        G_error.backward()
-        D_G_z2 = output.mean().item()
-        # Update G
-        optimizerG.step()
-
-        # Output training stats
-        if i % 50 == 0:
-            print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                  % (epoch, num_epochs, i, len(dataloader),
-                     D_error.item(), G_error.item(), D_x, D_G_z1, D_G_z2))
-
-        # Save Losses for plotting later
-        G_losses.append(errG.item())
-        D_losses.append(errD.item())
-
-        # Check how the generator is doing by saving G's output on fixed_noise
-        if (iters % 500 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
-            with torch.no_grad():
-                fake = netG(fixed_noise).detach().cpu()
-            img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
-
-        iters += 1#
-        netG.zero_grad()
-        label.fill_(real_label)  # fake labels are real for generator cost
-        # Since we just updated D, perform another forward pass of all-fake batch through D
-        output = netD(fake).view(-1)
-        # Calculate G's loss based on this output
-        G_error = loss_function(output, label)
-        # Calculate gradients for G
-        G_error.backward()
-        D_G_z2 = output.mean().item()
-        # Update G
-        optimizerG.step()
-
         # Output training stats
         if i % 50 == 0:
             print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
