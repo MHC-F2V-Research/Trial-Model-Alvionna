@@ -15,6 +15,12 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import pandas as pd
+from torchvision.io import read_image
+import glob
+import cv2
+
+
 
 nsf = 32 #size of siamese feature map
 siamese_batch = 64
@@ -23,6 +29,67 @@ size_z = 100
 ngf = 64
 ndf = 64
 nc = 3 # rgb = 3, graysace = 1
+
+train_data_path = 'images/kinova_external_images'
+test_data_path = 'images/kinova_external_images'
+
+train_image_paths = [] #to store image paths in list
+
+for data_path in glob.glob(train_data_path + '/*'): # /* meaning everything that comes after train_data_path string
+    train_image_path.append(glob.glob(data_path + '/*'))
+
+train_image_paths = list(flatten(train_image_paths))
+random.shuffle(train_image_paths)
+
+train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
+validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
+
+test_image_paths = []
+
+for data_path in glob.glob(test_data_path + '/*'):
+    test_image_paths.append(glob.glob(data_path + '/*'))
+
+test_image_paths = list(flatten(test_image_paths))
+random.shuffle(test_image_paths)
+
+#have to change it to fit 2 images 
+class KinovaDataset(Dataset):
+    def __init__(self, img_paths, transform=None, target_transform=None):
+        self.img_paths = img_paths
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.img_paths)
+
+    def __getitem__(self, idx):
+        img_filepath = self.img_paths[idx]
+        image = read_image(img_filepath)
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image
+
+        # what label do we have?
+
+        # img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0]) #getting the location of our image datase
+        # #iloc (csv file has row and columns) -> iloc[row, column] -> iloc[idx, 0] = taking values from the 1st column
+        # image = read_image(img_path) #reading the image and converts it into a tensor
+        # label = self.img_labels.iloc[idx, 1] #get the corresponding label from csv data
+        # if self.transform:
+        #     image = self.transform(image)
+        # if self.target_transform:
+        #     label = self.target_transform(label)
+        # return image, label
+
+train_dataset = KinovaDataset(train_image_paths)
+validation_dataset = KinovaDataset(validation_paths)
+test_dataset = KinovaDataset(test_image_paths)
+
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 class View(nn.Module):
     def __init__(self, shape):
@@ -197,8 +264,10 @@ def train():
     num_epochs = 1000
 
     for epochs in range(num_epochs):
-        for i, data in enumerate(dataset, 0):
-            #encoder training
+        for i, data in enumerate(train_loader, 0):
+            ###################
+            # ENCODER TRAINING
+            ###################
             img0, img1 , label = data
             img0, img1 , label = img0.cuda(), img1.cuda() , label.cuda()
             optimizerE.zero_grad()
@@ -210,6 +279,10 @@ def train():
             optimizerE.step()
 
             output_encoder = torch.cat((output1, output2), 1)
+
+            #########################
+            # DISCRIMINATOR TRAINING
+            #########################
 
             #train all-fake
             optimizerD.zero_grad()
@@ -231,8 +304,9 @@ def train():
 
             optimizerD.step() #update the discriminator
 
-            #generator training
-
+            #####################
+            # GENERATOR TRAINING
+            #####################
             optimizerG.zero_grad()
             gen_label = torch.ones(output_encoder.size(0), 1, device=device)
             fake_image = generator(output_encoder)
@@ -245,8 +319,9 @@ def train():
 
             optimizerG.step()
 
+            #count the losses
             G_losses.append(loss_genenator.item())
             D_losses.append(discriminator_loss.item())
             E_losses.append(loss_contrastive.item())
-            
+
         return G_losses, D_losses, E_losses
