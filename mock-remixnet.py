@@ -19,6 +19,9 @@ import pandas as pd
 from torchvision.io import read_image
 import glob
 import cv2
+from PIL import Image
+import csv
+import sys
 
 
 
@@ -52,7 +55,32 @@ for data_path in glob.glob(test_data_path + '/*'):
 test_image_paths = list(flatten(test_image_paths))
 random.shuffle(test_image_paths)
 
-#have to change it to fit 2 images 
+#only for one image, we need another one
+for file in train_image_paths:
+    print(file)
+    img_file = Image.open(file)
+    # img_file.show()
+
+    # get original image parameters...
+    width, height = img_file.size
+    format = img_file.format
+    mode = img_file.mode
+
+    # Make image Greyscale
+    # img_grey = img_file.convert('L')
+    #img_grey.save('result.png')
+    #img_grey.show()
+
+    # Save the image values
+    value = np.asarray(img_file.getdata(), dtype=np.int).reshape((img_file.size[1], img_file.size[0]))
+    value = value.flatten()
+    print(value)
+    with open("img_files.csv", 'a') as f: #a -> opens a file for appending, creates the file if it does not exist
+        writer = csv.writer(f)
+        writer.writerow(value)
+
+
+#have to change it to fit 2 images
 class KinovaDataset(Dataset):
     def __init__(self, img_paths, transform=None, target_transform=None):
         self.img_paths = img_paths
