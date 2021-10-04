@@ -23,7 +23,9 @@ from PIL import Image
 import csv
 import sys
 
-
+from datacleaner import autocleaner
+#datacleaning -> datacleaner, prettypandas
+#pip install datacleaner
 
 nsf = 32 #size of siamese feature map
 siamese_batch = 64
@@ -32,6 +34,7 @@ size_z = 100
 ngf = 64
 ndf = 64
 nc = 3 # rgb = 3, graysace = 1
+
 
 train_data_path = 'images/kinova_external_images'
 test_data_path = 'images/kinova_external_images'
@@ -75,10 +78,47 @@ for file in train_image_paths:
     value = np.asarray(img_file.getdata(), dtype=np.int).reshape((img_file.size[1], img_file.size[0]))
     value = value.flatten()
     print(value)
-    with open("img_files.csv", 'a') as f: #a -> opens a file for appending, creates the file if it does not exist
+    with open("complete_files.csv", 'a') as f: #a -> opens a file for appending, creates the file if it does not exist
         writer = csv.writer(f)
         writer.writerow(value)
 
+#reading the force info csv
+force_data = pd.read_csv("csv_file_name.csv")
+#reading the img info csv
+complete_data = pd.read_csv("complete_files.csv")
+
+#cleaning the data
+clean_force_data = autoclean(force_data)
+clean_img_data = autoclean(img_data)
+
+#appedning the img and force info to one csv file
+for index in clean_img_data.iloc[:]: #taking all the rows
+    for header in clean_force_data.columns: #taking the force information's headers
+        complete_data[header] = clean_force_data[i]
+
+complete_data.to_csv("complete_files.csv", index = False)
+
+#still taking 1 image
+class CSVDataset(Dataset):
+    def __init__(self, csv_file, root_dir, transform=None):
+        self.csv_file = pd.read_csv(csv_file)
+        self.root_dir = root_dir
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.csv_file)
+
+    def __getitem__(self,idx):
+        img_name = os.path.join(self.root_dir, self.csv_file.iloc[idx, 0]) #extracting only one image, we need to use for loop
+        image = read_image(img_name) #io.imread (skimage)
+        force_info = self.csv_file.iloc[idx, 1:]
+        force_info = np.array([force_info])
+        sample = {'image': image, 'force information': force_info}
+
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
 
 #have to change it to fit 2 images
 class KinovaDataset(Dataset):
