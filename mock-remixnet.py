@@ -16,14 +16,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pandas as pd
-from torchvision.io import read_image
+#from torchvision.io import read_image
 import glob
 import cv2
 from PIL import Image
 import csv
 import sys
 
-from datacleaner import autocleaner
+from datacleaner import autoclean
 #datacleaning -> datacleaner, prettypandas
 #pip install datacleaner
 
@@ -36,65 +36,34 @@ ndf = 64
 nc = 3 # rgb = 3, graysace = 1
 
 
-train_data_path = 'images/kinova_external_images'
-test_data_path = 'images/kinova_external_images'
+train_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
+test_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 
-train_image_paths = [] #to store image paths in list
-
-for data_path in glob.glob(train_data_path + '/*'): # /* meaning everything that comes after train_data_path string
-    train_image_path.append(glob.glob(data_path + '/*'))
-
-train_image_paths = list(flatten(train_image_paths))
-random.shuffle(train_image_paths)
-
-train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
-validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
-
-test_image_paths = []
-
-for data_path in glob.glob(test_data_path + '/*'):
-    test_image_paths.append(glob.glob(data_path + '/*'))
-
-test_image_paths = list(flatten(test_image_paths))
-random.shuffle(test_image_paths)
 
 #only for one image, we need another one
-for file in train_image_paths:
-    print(file)
-    img_file = Image.open(file)
-    # img_file.show()
-
-    # get original image parameters...
-    width, height = img_file.size
-    format = img_file.format
-    mode = img_file.mode
-
-    # Make image Greyscale
-    # img_grey = img_file.convert('L')
-    #img_grey.save('result.png')
-    #img_grey.show()
-
-    # Save the image values
-    value = np.asarray(img_file.getdata(), dtype=np.int).reshape((img_file.size[1], img_file.size[0]))
-    value = value.flatten()
-    print(value)
-    with open("complete_files.csv", 'a') as f: #a -> opens a file for appending, creates the file if it does not exist
-        writer = csv.writer(f)
-        writer.writerow(value)
+import cv2
+for img in os.listdir(train_data_path):
+	img_array = cv2.imread(os.path.join(train_data_path,img))
+	img_array = (img_array.flatten())
+	img_array = img_array.reshape(-1,1).T
+	with open('complete_files.csv', 'a') as f:
+		writer = csv.writer(f)
+		writer.writerow('rgb image')
+		writer.writerow(img_array)
 
 #reading the force info csv
-force_data = pd.read_csv("csv_file_name.csv")
+force_data = pd.read_csv("/media/imero/Elements/flarp_folding_1/csvFiles/flarp_folding_1-_my_gen3_base_feedback.csv")
 #reading the img info csv
 complete_data = pd.read_csv("complete_files.csv")
 
 #cleaning the data
 clean_force_data = autoclean(force_data)
-clean_img_data = autoclean(img_data)
+clean_img_data = autoclean(complete_data)
 
 #appedning the img and force info to one csv file
 for index in clean_img_data.iloc[:]: #taking all the rows
     for header in clean_force_data.columns: #taking the force information's headers
-        complete_data[header] = clean_force_data[i]
+        complete_data[header] = clean_force_data[index]
 
 complete_data.to_csv("complete_files.csv", index = False)
 
