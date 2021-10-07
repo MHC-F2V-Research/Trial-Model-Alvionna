@@ -37,6 +37,44 @@ ngf = 64
 ndf = 64
 nc = 3 # rgb = 3, graysace = 1
 
+def blurring(img):
+    n_avg1 = random.randint(0,100)
+    n_avg2 = random.randint(0,100)
+    n_gauss1 = random.randint(0,100)
+    n_gauss2 = random.randint(0,100)
+    n_med = random.randint(0,100)
+    n_bil1 = random.randint(0,100)
+    n_bil2 = random.randint(0,100)
+    n_bil3 = random.randint(0,100)
+    float = random.uniform(0.1, 30.0)
+
+    if img.endswith(".png"):
+        # img_color = cv2.imread(os.path.join(directory_color, file_color))
+        # img_depth =  cv2.imread(os.path.join(directory_depth, file_depth))
+
+        blur_avg_color = cv2.blur(img, (n_avg1, n_avg2))
+        # blur_avg_depth = cv2.blur(img_depth, (n_avg1, n_avg2))
+
+        blur_gaussian_color = cv2.GaussianBlur(img, (n_gauss, n_gauss), float, float)
+        # blur_gaussian_depth = cv2.GaussianBlur(img_depth, (n_gauss1, n_gauss2), float, float)
+
+        median_blur = cv2.medianBlur(img, n_med)
+        # median_blur = cv2.medianBlur(img_depth, n_med)
+
+        bilateral_color = cv2.bilateralFilter(img, n_bil1, n_bil2, n_bil3)
+        # bilateral_depth = cv2.bilateralFilter(img_depth, n_bil1, n_bil2, n_bil3)
+		return img
+
+        # path_color = "kinova_color_blur_images"
+        # if not os.path.exists(path_color):
+        #     os.makedirs(path)
+        # cv2.imwrite(os.path.join(path_color, file_color), img_color)
+		#
+        # path_depth = "kinova_depth_blur_images"
+        # if not os.path.exists(path_depth):
+        #     os.makedirs(path)
+        # cv2.imwrite(os.path.join(path_depth, file_depth), img_depth)
+
 
 train_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 test_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
@@ -44,28 +82,45 @@ test_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 #assuming the number of force data is equal to the number of existing image
 #only for one image, we need another one
 for img in os.listdir(train_data_path):
+	img = blurring(img)
 	img_array = cv2.imread(os.path.join(train_data_path,img))
 	img_array = (img_array.flatten())
 	img_array = img_array.reshape(-1,1).T
-	with open('img_files.csv', 'a') as f:
+	with open('img1_files.csv', 'a') as f:
 		writer = csv.writer(f)
-		writer.writerow('rgb image')
+		writer.writerow('blur1 image')
 		writer.writerow(img_array)
 
-#reading the force info csv
-force_data = pd.read_csv("/media/imero/Elements/flarp_folding_1/csvFiles/flarp_folding_1-_my_gen3_base_feedback.csv")
-#reading the image csv
-img_data = pd.read_csv("img_files.csv")
+for img in os.listdir(train_data_path):
+	img = blurring(img)
+	img_array = cv2.imread(os.path.join(train_data_path,img))
+	img_array = (img_array.flatten())
+	img_array = img_array.reshape(-1,1).T
+	with open('img2_files.csv', 'a') as f:
+		writer = csv.writer(f)
+		writer.writerow('blur2 image')
+		writer.writerow(img_array)
 
-#combining the data
-complete_csv = img_data.merge(force_data, on = "date") # on what basis we want to merge the data?
-complete_csv.to_csv("complete_files.csv", index = False)
+img_blurred1 = pd.read_csv("img1_files.csv")
+img_blurred2 = pd.read_csv("img2_files.csv")
 
-#reading the complete data
-complete_data = pd.read_csv("/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/complete_files.csv")
+complete_csv = img_blurred1.merge(img_blurred2)
+complete_csv.to_csv("complete_files2.csv", index = False)
 
-#cleaning the data
-cleaned_data = autoclean(complete_data)
+# #reading the force info csv
+# force_data = pd.read_csv("/media/imero/Elements/flarp_folding_1/csvFiles/flarp_folding_1-_my_gen3_base_feedback.csv")
+# #reading the image csv
+# img_data = pd.read_csv("img_files.csv")
+#
+# #combining the data
+# complete_csv = img_data.merge(force_data, on = "date") # on what basis we want to merge the data?
+# complete_csv.to_csv("complete_files.csv", index = False)
+#
+# #reading the complete data
+# complete_data = pd.read_csv("/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/complete_files.csv")
+#
+# #cleaning the data
+# cleaned_data = autoclean(complete_data)
 
 # #appending the img and force info to one csv file
 # for index in clean_img_data.iloc[:]: #taking all the rows
@@ -128,17 +183,6 @@ class KinovaDataset(Dataset):
         # if self.target_transform:
         #     label = self.target_transform(label)
         # return image, label
-
-# train_dataset = KinovaDataset(train_image_paths)
-# validation_dataset = KinovaDataset(validation_paths)
-# test_dataset = KinovaDataset(test_image_paths)
-#
-# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
-# test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
-
-#tensor -> (C,H,W)
-
 
 class Rescale(object):
     """Rescale the image in a sample to a given size.
@@ -229,6 +273,16 @@ train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size = batch
 # do we want to separate the dataset to validation and test?
 train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
 validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
+
+# train_dataset = KinovaDataset(train_image_paths)
+# validation_dataset = KinovaDataset(validation_paths)
+# test_dataset = KinovaDataset(test_image_paths)
+#
+# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+# test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
+#
+# tensor -> (C,H,W)
 
 class View(nn.Module):
     def __init__(self, shape):
