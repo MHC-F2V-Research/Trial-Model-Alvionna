@@ -16,14 +16,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pandas as pd
-#from torchvision.io import read_image
+import torchvision.io
+from torchvision.io import read_image
 import glob
 import cv2
 from PIL import Image
 import csv
 import sys
+import skimage
 
-from datacleaner import autoclean
+from datacleaner import autocleaner
 #datacleaning -> datacleaner, prettypandas
 #pip install datacleaner
 
@@ -39,33 +41,38 @@ nc = 3 # rgb = 3, graysace = 1
 train_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 test_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 
-
+#assuming the number of force data is equal to the number of existing image
 #only for one image, we need another one
-import cv2
 for img in os.listdir(train_data_path):
 	img_array = cv2.imread(os.path.join(train_data_path,img))
 	img_array = (img_array.flatten())
 	img_array = img_array.reshape(-1,1).T
-	with open('complete_files.csv', 'a') as f:
+	with open('img_files.csv', 'a') as f:
 		writer = csv.writer(f)
 		writer.writerow('rgb image')
 		writer.writerow(img_array)
 
 #reading the force info csv
 force_data = pd.read_csv("/media/imero/Elements/flarp_folding_1/csvFiles/flarp_folding_1-_my_gen3_base_feedback.csv")
-#reading the img info csv
-complete_data = pd.read_csv("complete_files.csv")
+#reading the image csv
+img_data = pd.read_csv("img_files.csv")
+
+#combining the data
+complete_csv = img_data.merge(force_data, on = "date") # on what basis we want to merge the data?
+complete_csv.to_csv("complete_files.csv", index = False)
+
+#reading the complete data
+complete_data = pd.read_csv("/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/complete_files.csv")
 
 #cleaning the data
-clean_force_data = autoclean(force_data)
-clean_img_data = autoclean(complete_data)
+cleaned_data = autoclean(complete_data)
 
-#appedning the img and force info to one csv file
-for index in clean_img_data.iloc[:]: #taking all the rows
-    for header in clean_force_data.columns: #taking the force information's headers
-        complete_data[header] = clean_force_data[index]
-
-complete_data.to_csv("complete_files.csv", index = False)
+# #appending the img and force info to one csv file
+# for index in clean_img_data.iloc[:]: #taking all the rows
+#     for header in clean_force_data.columns: #taking the force information's headers
+#         complete_data[header] = clean_force_data[index]
+#
+# complete_data.to_csv("complete_files.csv", index = False)
 
 #still taking 1 image
 class CSVDataset(Dataset):
@@ -80,9 +87,11 @@ class CSVDataset(Dataset):
     def __getitem__(self,idx):
         img_name = os.path.join(self.root_dir, self.csv_file.iloc[idx, 0]) #extracting only one image, we need to use for loop
         image = read_image(img_name) #io.imread (skimage)
-        force_info = self.csv_file.iloc[idx, 1:]
+        force_header = list(self.csv_file.columns) #return a list of the header
+        force_info = self.csv_file.iloc[idx, 1:] #extracting the columns
         force_info = np.array([force_info])
-        sample = {'image': image, 'force information': force_info}
+        sample = {'image': image, force_header[i]: force_info[i] for i in range(len(force_header))}
+		#create a dictionary to easily search for the info that we want
 
         if self.transform:
             sample = self.transform(sample)
@@ -120,13 +129,106 @@ class KinovaDataset(Dataset):
         #     label = self.target_transform(label)
         # return image, label
 
-train_dataset = KinovaDataset(train_image_paths)
-validation_dataset = KinovaDataset(validation_paths)
-test_dataset = KinovaDataset(test_image_paths)
+# train_dataset = KinovaDataset(train_image_paths)
+# validation_dataset = KinovaDataset(validation_paths)
+# test_dataset = KinovaDataset(test_image_paths)
+#
+# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+# test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
+#tensor -> (C,H,W)
+
+
+class Rescale(object):
+    """Rescale the image in a sample to a given size.
+
+    Args:
+        output_size (tuple or int): Desired output size. If tuple, output is
+            matched to output_size. If int, smaller of image edges is matched
+            to output_size keeping aspect ratio the same.
+    """
+
+    def __init__(self, output_size):
+        assert isinstance(output_size, (int, tuple))
+        self.output_size = output_size
+
+    def __call__(self, sample):
+        image = sample['image']
+
+        height, width = image.shape[:2] #extracting height and width
+        if isinstance(self.output_size, int): # if the input is an int
+            if height > width:
+                new_height, new_width = self.output_size * height / width, self.output_size
+				#maintaining the aspect ratio
+            else:
+                new_height, new_width = self.output_size, self.output_size * width / height #maintaining the aspect ratio
+        else:
+            new_height, new_width = self.output_size
+
+        new_height, new_width = int(new_height), int(new_width)
+
+        img = transforms.resize(image, (new_h, new_w))
+
+        return {'image': img} #return a dictionary
+
+
+class RandomCrop(object):
+    """Crop randomly the image in a sample.
+
+    Args:
+        output_size (tuple or int): Desired output size. If int, square crop
+            is made.
+    """
+
+    def __init__(self, output_size):
+        assert isinstance(output_size, (int, tuple))
+        if isinstance(output_size, int):
+            self.output_size = (output_size, output_size)
+        else:
+            assert len(output_size) == 2
+            self.output_size = output_size
+
+    def __call__(self, sample):
+        image, landmarks = sample['image'], sample['landmarks']
+
+        h, w = image.shape[:2]
+        new_h, new_w = self.output_size
+
+        top = np.random.randint(0, h - new_h)
+        left = np.random.randint(0, w - new_w)
+
+        image = image[top: top + new_h,
+                      left: left + new_w]
+
+        landmarks = landmarks - [left, top]
+
+        return {'image': image, 'landmarks': landmarks}
+
+
+class ToTensor(object):
+    """Convert ndarrays in sample to Tensors."""
+
+    def __call__(self, sample):
+        image = sample['image']
+
+        # swap color axis because
+        # numpy image: H x W x C
+        # torch image: C x H x W
+        image = image.transpose((2, 0, 1))
+        return {'image': torch.from_numpy(image)}
+
+csv_path = "/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/"
+csv_file = "complete_files.csv"
+
+train_dataset = CSVDataset(csv_file=csv_file, root_dir=csv_path, transforms=transforms.Compose([Rescale((256,256)),ToTensor()]))
+
+
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+
+# do we want to separate the dataset to validation and test?
+train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
+validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
 
 class View(nn.Module):
     def __init__(self, shape):
