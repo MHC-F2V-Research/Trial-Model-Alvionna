@@ -464,3 +464,9 @@ def train():
             E_losses.append(loss_contrastive.item())
 
         return G_losses, D_losses, E_losses
+
+def main():
+	return train()
+
+if __name__ == "__main__":
+    main()
