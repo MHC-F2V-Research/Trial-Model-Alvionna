@@ -65,7 +65,6 @@ def blurring(img):
         # bilateral_depth = cv2.bilateralFilter(img_depth, n_bil1, n_bil2, n_bil3)
     return img
 
-
         # path_color = "kinova_color_blur_images"
         # if not os.path.exists(path_color):
         #     os.makedirs(path)
@@ -264,16 +263,15 @@ class ToTensor(object):
         return {'image': torch.from_numpy(image)}
 
 csv_path = "/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/"
-csv_file = "complete_files.csv"
+csv_file = "complete_files2.csv"
 
 train_dataset = CSVDataset(csv_file=csv_file, root_dir=csv_path, transforms=transforms.Compose([Rescale((256,256)),ToTensor()]))
-
 
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
 
 # do we want to separate the dataset to validation and test?
-train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
-validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
+# train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
+# validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
 
 # train_dataset = KinovaDataset(train_image_paths)
 # validation_dataset = KinovaDataset(validation_paths)
