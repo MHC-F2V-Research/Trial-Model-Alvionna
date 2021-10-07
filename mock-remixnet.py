@@ -63,7 +63,8 @@ def blurring(img):
 
         bilateral_color = cv2.bilateralFilter(img, n_bil1, n_bil2, n_bil3)
         # bilateral_depth = cv2.bilateralFilter(img_depth, n_bil1, n_bil2, n_bil3)
-		return img
+    return img
+
 
         # path_color = "kinova_color_blur_images"
         # if not os.path.exists(path_color):
