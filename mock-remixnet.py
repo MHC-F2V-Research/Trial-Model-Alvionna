@@ -52,16 +52,16 @@ def blurring(img):
         # img_color = cv2.imread(os.path.join(directory_color, file_color))
         # img_depth =  cv2.imread(os.path.join(directory_depth, file_depth))
 
-        blur_avg_color = cv2.blur(img, (n_avg1, n_avg2))
+        cv2.blur(img, (n_avg1, n_avg2))
         # blur_avg_depth = cv2.blur(img_depth, (n_avg1, n_avg2))
 
-        blur_gaussian_color = cv2.GaussianBlur(img, (n_gauss, n_gauss), float, float)
+        cv2.GaussianBlur(img, (n_gauss, n_gauss), float, float)
         # blur_gaussian_depth = cv2.GaussianBlur(img_depth, (n_gauss1, n_gauss2), float, float)
 
-        median_blur = cv2.medianBlur(img, n_med)
+        cv2.medianBlur(img, n_med)
         # median_blur = cv2.medianBlur(img_depth, n_med)
 
-        bilateral_color = cv2.bilateralFilter(img, n_bil1, n_bil2, n_bil3)
+        cv2.bilateralFilter(img, n_bil1, n_bil2, n_bil3)
         # bilateral_depth = cv2.bilateralFilter(img_depth, n_bil1, n_bil2, n_bil3)
     return img
 
@@ -82,8 +82,8 @@ test_data_path = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 #assuming the number of force data is equal to the number of existing image
 #only for one image, we need another one
 for img in os.listdir(train_data_path):
-	img = blurring(img)
 	img_array = cv2.imread(os.path.join(train_data_path,img))
+    img_array = blurring(img_array)
 	img_array = (img_array.flatten())
 	img_array = img_array.reshape(-1,1).T
 	with open('img1_files.csv', 'a') as f:
@@ -92,8 +92,8 @@ for img in os.listdir(train_data_path):
 		writer.writerow(img_array)
 
 for img in os.listdir(train_data_path):
-	img = blurring(img)
 	img_array = cv2.imread(os.path.join(train_data_path,img))
+    img_array = blurring(img_array)
 	img_array = (img_array.flatten())
 	img_array = img_array.reshape(-1,1).T
 	with open('img2_files.csv', 'a') as f:
