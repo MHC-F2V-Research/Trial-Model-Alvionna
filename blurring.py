@@ -51,7 +51,7 @@ def blurring(directory_color, directory_depth):
             blur_avg_color = cv2.blur(img_color, (n_avg1, n_avg2))
             blur_avg_depth = cv2.blur(img_depth, (n_avg1, n_avg2))
 
-            blur_gaussian_color = cv2.GaussianBlur(img_color, (n_gauss, n_gauss), float, float)
+            blur_gaussian_color = cv2.GaussianBlur(img_color, (n_gauss1, n_gauss2), float, float)
             blur_gaussian_depth = cv2.GaussianBlur(img_depth, (n_gauss1, n_gauss2), float, float)
 
             median_blur = cv2.medianBlur(img_color, n_med)
@@ -240,4 +240,3 @@ plt.xticks([]), plt.yticks([])
 plt.subplot(122),plt.imshow(bilateral),plt.title('Bilateral Filtering')
 plt.xticks([]), plt.yticks([])
 plt.show()
-
