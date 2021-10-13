@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pandas as pd
 import torchvision.io
-from torchvision.io import read_image
+#from torchvision.io import read_image
 import glob
 import cv2
 from PIL import Image
@@ -39,68 +39,48 @@ ndf = 64
 nc = 3 # rgb = 3, graysace = 1
 
 def blurring(directory_vision, directory_force):
-    n_avg1 = random.randrange(1,30+1,2)
-    n_avg2 = random.randrange(1,30+1,2)
-    n_gauss1 = random.randrange(1,30+1,2)
-    n_gauss2 = random.randrange(1,30+1,2)
-    n_med = random.randrange(1,30+1,2)
-    n_bil1 = random.randrange(1,30+1,2)
-    n_bil2 = random.randrange(1,30+1,2)
-    n_bil3 = random.randrange(1,30+1,2)
-    decimal = random.randrange(1,30+1,2) #random.uniform(0.0,30.0)
+    n_avg1 = random.randrange(1,100+1,2)
+    n_avg2 = random.randrange(1,100+1,2)
+    n_gauss1 = random.randrange(1,100+1,2)
+    n_gauss2 = random.randrange(1,100+1,2)
+    n_med = random.randrange(1,100+1,2)
+    n_bil1 = random.randrange(1,100+1,2)
+    n_bil2 = random.randrange(1,100+1,2)
+    n_bil3 = random.randrange(1,100+1,2)
+    decimal = random.randrange(1,100+1,2) #random.uniform(0.0,30.0)
 
     for (file_vision, file_force) in zip (os.listdir(directory_vision), os.listdir(directory_force)):
         if file_vision.endswith(".png") or file_force.endswith(".png"):
-            img_color = cv2.imread(os.path.join(directory_color, file_vision))
-            img_depth =  cv2.imread(os.path.join(directory_depth, file_force))
+            img_color = cv2.imread(os.path.join(directory_vision, file_vision))
+            img_depth =  cv2.imread(os.path.join(directory_force, file_force))
 
-            blur_avg_color = cv2.blur(img_color, (n_avg1, n_avg2))
-            blur_avg_depth = cv2.blur(img_depth, (n_avg1, n_avg2))
+            cv2.blur(img_color, (n_avg1, n_avg2))
+            cv2.blur(img_depth, (n_avg1, n_avg2))
 
-            blur_gaussian_color = cv2.GaussianBlur(blur_avg_color, (n_gauss1, n_gauss2), float, float)
-            blur_gaussian_depth = cv2.GaussianBlur(blur_avg_depth, (n_gauss1, n_gauss2), float, float)
+            cv2.GaussianBlur(src = img_color, ksize = (n_gauss1, n_gauss2), sigmaX = decimal, sigmaY = decimal)
+            cv2.GaussianBlur(src = img_depth, ksize = (n_gauss1, n_gauss2), sigmaX = decimal, sigmaY = decimal)
 
-            median_blur_color = cv2.medianBlur(blur_gaussian_color, n_med)
-            median_blur_depth = cv2.medianBlur(blur_gaussian_depth, n_med)
+            cv2.medianBlur(img_color, n_med)
+            cv2.medianBlur(img_depth, n_med)
 
-            bilateral_color = cv2.bilateralFilter(median_blur_color, n_bil1, n_bil2, n_bil3)
-            bilateral_depth = cv2.bilateralFilter(median_blur_depth, n_bil1, n_bil2, n_bil3)
+            cv2.bilateralFilter(img_color, n_bil1, n_bil2, n_bil3)
+            cv2.bilateralFilter(img_depth, n_bil1, n_bil2, n_bil3)
 
             path_vision = "/media/imero/Elements/flarp_folding_1/mock_vision_blur_images"
             if not os.path.exists(path_vision):
-                os.makedirs(path)
-            cv2.imwrite(os.path.join(path_color, file_vision), bilateral_color)
+                os.makedirs(path_vision)
+            cv2.imwrite(os.path.join(path_vision,file_vision), img_color)
 
             path_force = "/media/imero/Elements/flarp_folding_1/mock_force_blur_images"
             if not os.path.exists(path_force):
-                os.makedirs(path)
-            cv2.imwrite(os.path.join(path_depth, file_force), bilateral_depth)
+                os.makedirs(path_force)
+            cv2.imwrite(os.path.join(path_force, file_force), img_depth)
 
 clear_vision = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 clear_force = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 
 blurring(clear_vision, clear_force)
 
-train_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
-test_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
-
-train_image_paths = [] #to store image paths in list
-
-for data_path in glob.glob(train_data_path + '/*'):
-    train_image_paths.append(glob.glob(data_path + '/*'))
-
-train_image_paths = list(flatten(train_image_paths))
-random.shuffle(train_image_paths)
-
-train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))]
-validation_image_paths = train_image_paths[int(0.8*len(train_image_paths)):]
-
-test_image_paths = []
-
-for data_path in glob.glob(test_data_path + '/*'):
-    test_image_paths.append(glob.glob(data_path + '/*'))
-
-test_image_paths = list(flatten(test_image_paths))
 
 #assuming the number of force data is equal to the number of existing image
 #only for one image, we need another one
@@ -201,7 +181,7 @@ class CSVDataset(Dataset):
         force_header = list(self.csv_file.columns) #return a list of the header
         force_info = self.csv_file.iloc[idx, 1:] #extracting the columns
         force_info = np.array([force_info])
-        sample = {'image': image, force_header[i]: force_info[i] for i in range(len(force_header))}
+        sample = {'image': image}
 		#create a dictionary to easily search for the info that we want
 
         if self.transform:
@@ -329,19 +309,19 @@ class ToTensor(object):
 # train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
 # validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
 
-train_dataset = FlarpDataset(train_image_paths)
-validation_dataset = FlarpDataset(validation_paths)
-test_dataset = FlarpDataset(test_image_paths)
+# train_dataset = FlarpDataset(train_image_paths)
+# validation_dataset = FlarpDataset(validation_paths)
+# test_dataset = FlarpDataset(test_image_paths)
 
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
+# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+# test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 # tensor -> (C,H,W)
 
 class View(nn.Module):
     def __init__(self, shape):
-		super(View, self).__init__()
+        super(View, self).__init__()
         self.shape = shape
 
     def forward(self, x):
@@ -358,8 +338,8 @@ class Encoder(nn.Module):
             nn.Conv2d(siamese_batch, nsf, (2,2), stride=0, padding=1, bias=False),
             nn.Tanh(),
 
-            nn.Conv2d(nsf, nsf/2, (5,5), stride=0, padding=1, bias=False),
-            nn.Linear(nsf/2, nsf * 4, bias=False),
+            nn.Conv2d(nsf, int(nsf/2), (5,5), stride=0, padding=1, bias=False),
+            nn.Linear(int(nsf/2), nsf * 4, bias=False),
             nn.ReLu(),
 
             nn.Linear(nsf * 4, 50, bias = False),
