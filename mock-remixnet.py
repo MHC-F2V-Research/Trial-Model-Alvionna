@@ -81,6 +81,9 @@ clear_force = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 
 blurring(clear_vision, clear_force)
 
+def flatten(t):
+    return [item for sublist in t for item in sublist]
+
 train_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
 test_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
 
@@ -89,7 +92,7 @@ train_image_paths = [] #to store image paths in list
 for data_path in glob.glob(train_data_path + '/*'):
     train_image_paths.append(glob.glob(data_path + '/*'))
 
-train_image_paths = list(flatten(train_image_paths))
+train_image_paths = flatten(train_image_paths)
 random.shuffle(train_image_paths)
 
 train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))]
@@ -100,7 +103,7 @@ test_image_paths = []
 for data_path in glob.glob(test_data_path + '/*'):
     test_image_paths.append(glob.glob(data_path + '/*'))
 
-test_image_paths = list(flatten(test_image_paths))
+test_image_paths = flatten(test_image_paths)
 
 #assuming the number of force data is equal to the number of existing image
 #only for one image, we need another one
@@ -177,7 +180,7 @@ class FlarpDataset(Dataset):
         img2_name = self.img2_path[idx]
         image1 = cv2.imread(img1_name) #io.imread (skimage)
         image2 = cv2.imread(img2_name)
-        sample = {'vision_img': image1, 'force_img': image2}
+        sample = {'vision_img': image1, 'force_img': image2, 'label': 1}
 		#create a dictionary to easily search for the info that we want
 
         if self.transform:
@@ -331,9 +334,9 @@ train_dataset = FlarpDataset(train_image_paths, transform = transforms.Compose([
 validation_dataset = FlarpDataset(validation_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
 test_dataset = FlarpDataset(test_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
 
-# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
-# test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 # tensor -> (C,H,W)
 
