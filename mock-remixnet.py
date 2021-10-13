@@ -81,6 +81,26 @@ clear_force = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 
 blurring(clear_vision, clear_force)
 
+train_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
+test_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
+
+train_image_paths = [] #to store image paths in list
+
+for data_path in glob.glob(train_data_path + '/*'):
+    train_image_paths.append(glob.glob(data_path + '/*'))
+
+train_image_paths = list(flatten(train_image_paths))
+random.shuffle(train_image_paths)
+
+train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))]
+validation_image_paths = train_image_paths[int(0.8*len(train_image_paths)):]
+
+test_image_paths = []
+
+for data_path in glob.glob(test_data_path + '/*'):
+    test_image_paths.append(glob.glob(data_path + '/*'))
+
+test_image_paths = list(flatten(test_image_paths))
 
 #assuming the number of force data is equal to the number of existing image
 #only for one image, we need another one
