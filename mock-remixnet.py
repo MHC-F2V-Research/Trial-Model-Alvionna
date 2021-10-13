@@ -331,9 +331,9 @@ train_dataset = FlarpDataset(train_image_paths, transform = transforms.Compose([
 validation_dataset = FlarpDataset(validation_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
 test_dataset = FlarpDataset(test_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
 
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
+# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+# test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 # tensor -> (C,H,W)
 
