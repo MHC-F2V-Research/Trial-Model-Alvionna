@@ -38,6 +38,9 @@ ngf = 64
 ndf = 64
 nc = 3 # rgb = 3, graysace = 1
 
+def flatten(t):
+    return [item for sublist in t for item in sublist]
+
 def blurring(directory_vision, directory_force):
     n_avg1 = random.randrange(1,100+1,2)
     n_avg2 = random.randrange(1,100+1,2)
@@ -81,87 +84,44 @@ clear_force = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
 
 blurring(clear_vision, clear_force)
 
-train_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
-test_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
+vision_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
+force_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
 
-train_image_paths = [] #to store image paths in list
+vision_image_paths = [] #to store image paths in list
+force_image_paths = []
 
-for data_path in glob.glob(train_data_path + '/*'):
-    train_image_paths.append(glob.glob(data_path + '/*'))
+for data_path in glob.glob(vision_data_path + '/*'):
+    vision_image_paths.append(glob.glob(data_path + '/*'))
 
-train_image_paths = list(flatten(train_image_paths))
-random.shuffle(train_image_paths)
+for data_path in glob.glob(force_data_path + '/*'):
+    force_data_Paths.append(glob.glob(data_path + '/*'))
 
-train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))]
-validation_image_paths = train_image_paths[int(0.8*len(train_image_paths)):]
+vision_image_paths = flatten(vision_image_paths)
+force_image_paths = flatten(force_image_paths)
 
-test_image_paths = []
+vision_image_paths = vision_image_paths[:int(0.8*len(vision_image_paths))]
+force_image_paths = force_image_paths[:int(0.8*len(vision_image_paths))]
 
-for data_path in glob.glob(test_data_path + '/*'):
-    test_image_paths.append(glob.glob(data_path + '/*'))
+validation_vision_paths = vision_image_paths[int(0.8*len(vision_image_paths)):]
+validation_force_paths = force_image_paths[int(0.8*len(vision_image_paths)):]
 
-test_image_paths = list(flatten(test_image_paths))
+vision_test_data = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images'
+force_test_data = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images'
 
-#assuming the number of force data is equal to the number of existing image
-#only for one image, we need another one
-# with open('img1_files.csv', 'a') as f:
-#     writer = csv.writer(f)
-#     writer.writerow([blur1 image"])
-#     for img in os.listdir(train_data_path):
-#     	img_array = cv2.imread(os.path.join(train_data_path,img))
-#         img_array = blurring(img_array)
-#     	img_array = (img_array.flatten())
-#     	img_array = img_array.reshape(-1,1).T
-#     	writer.writerow(img_array)
-#
-# with open('img2_files.csv', 'a') as f:
-#     writer = csv.writer(f)
-#     writer.writerow(["blur2 image"])
-#     for img in os.listdir(train_data_path):
-#     	img_array = cv2.imread(os.path.join(train_data_path,img))
-#         img_array = blurring(img_array)
-#     	img_array = (img_array.flatten())
-#     	img_array = img_array.reshape(-1,1).T
-#     	writer.writerow(img_array)
-#
-# img_blurred1 = pd.read_csv("img1_files.csv")
-# img_blurred2 = pd.read_csv("img2_files.csv")
-#
-# with open("complete_files2.csv", 'a') as f:
-#     writer = csv.writer(f)
-#     writer.writerow(["blur_image1", "blur_image2"])
-#     with open("img1_files.csv", 'r') as img1 :
-#         reader = csv.reader(img1)
-#         writer.writerow(result + [0] for result in reader)
-#     with open("img2_files.csv", 'r') as img2 :
-#         reader = csv.reader(img2)
-#         writer.writerow([0] + result for result in reader)
-#
-# complete_csv = img_blurred1.merge(img_blurred2)
-# complete_csv.to_csv("complete_files2.csv", index = False)
+vision_test_paths = []
+force_test_paths = []
 
-# #reading the force info csv
-# force_data = pd.read_csv("/media/imero/Elements/flarp_folding_1/csvFiles/flarp_folding_1-_my_gen3_base_feedback.csv")
-# #reading the image csv
-# img_data = pd.read_csv("img_files.csv")
-#
-# #combining the data
-# complete_csv = img_data.merge(force_data, on = "date") # on what basis we want to merge the data?
-# complete_csv.to_csv("complete_files.csv", index = False)
-#
-# #reading the complete data
-# complete_data = pd.read_csv("/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/complete_files.csv")
-#
-# #cleaning the data
-# cleaned_data = autoclean(complete_data)
+for data_path in glob.glob(vision_test_data + '/*'):
+    vision_test_paths.append(glob.glob(vision_test_data + '/*'))
 
-# #appending the img and force info to one csv file
-# for index in clean_img_data.iloc[:]: #taking all the rows
-#     for header in clean_force_data.columns: #taking the force information's headers
-#         complete_data[header] = clean_force_data[index]
-#
-# complete_data.to_csv("complete_files.csv", index = False)
+for data_path in glob.glob(force_test_data + '/*'):
+    force_test_paths.append(glob.glob(force_test_data + '/*'))
 
+vision_test_paths = vision_test_paths[:int(0.2*len(vision_image_paths))]
+force_test_paths = force_test_paths[:int(0.2*len(vision_image_paths))]
+
+vision_test_paths = flatten(vision_test_paths)
+force_test_paths = flatten(force_test_paths)
 
 class FlarpDataset(Dataset):
     def __init__(self, img1_path, img2_path, transform=None):
@@ -177,7 +137,7 @@ class FlarpDataset(Dataset):
         img2_name = self.img2_path[idx]
         image1 = cv2.imread(img1_name) #io.imread (skimage)
         image2 = cv2.imread(img2_name)
-        sample = {'vision_img': image1, 'force_img': image2}
+        sample = {'vision_img': image1, 'force_img': image2, 'label': 1}
 		#create a dictionary to easily search for the info that we want
 
         if self.transform:
@@ -316,24 +276,14 @@ class ToTensor(object):
         image = image.transpose((2, 0, 1))
         return {'image': torch.from_numpy(image)}
 
-# csv_path = "/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/"
-# csv_file = "complete_files2.csv"
-#
-# train_dataset = CSVDataset(csv_file=csv_file, root_dir=csv_path, transforms=transforms.Compose([Rescale((256,256)),ToTensor()]))
-#
-# train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
 
-# do we want to separate the dataset to validation and test?
-# train_image_paths = train_image_paths[:int(0.8*len(train_image_paths))] # 80%
-# validation_paths = train_image_paths[int(0.8*len(train_image_paths)):] # 20%
+train_dataset = FlarpDataset(vision_image_paths, force_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
+validation_dataset = FlarpDataset(validation_vision_paths, validation_force_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
+test_dataset = FlarpDataset(vision_test_paths, force_test_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
 
-train_dataset = FlarpDataset(train_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
-validation_dataset = FlarpDataset(validation_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
-test_dataset = FlarpDataset(test_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
-
-# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
-# test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 # tensor -> (C,H,W)
 
@@ -581,3 +531,70 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+#assuming the number of force data is equal to the number of existing image
+#only for one image, we need another one
+# with open('img1_files.csv', 'a') as f:
+#     writer = csv.writer(f)
+#     writer.writerow([blur1 image"])
+#     for img in os.listdir(train_data_path):
+#     	img_array = cv2.imread(os.path.join(train_data_path,img))
+#         img_array = blurring(img_array)
+#     	img_array = (img_array.flatten())
+#     	img_array = img_array.reshape(-1,1).T
+#     	writer.writerow(img_array)
+#
+# with open('img2_files.csv', 'a') as f:
+#     writer = csv.writer(f)
+#     writer.writerow(["blur2 image"])
+#     for img in os.listdir(train_data_path):
+#     	img_array = cv2.imread(os.path.join(train_data_path,img))
+#         img_array = blurring(img_array)
+#     	img_array = (img_array.flatten())
+#     	img_array = img_array.reshape(-1,1).T
+#     	writer.writerow(img_array)
+#
+# img_blurred1 = pd.read_csv("img1_files.csv")
+# img_blurred2 = pd.read_csv("img2_files.csv")
+#
+# with open("complete_files2.csv", 'a') as f:
+#     writer = csv.writer(f)
+#     writer.writerow(["blur_image1", "blur_image2"])
+#     with open("img1_files.csv", 'r') as img1 :
+#         reader = csv.reader(img1)
+#         writer.writerow(result + [0] for result in reader)
+#     with open("img2_files.csv", 'r') as img2 :
+#         reader = csv.reader(img2)
+#         writer.writerow([0] + result for result in reader)
+#
+# complete_csv = img_blurred1.merge(img_blurred2)
+# complete_csv.to_csv("complete_files2.csv", index = False)
+
+# #reading the force info csv
+# force_data = pd.read_csv("/media/imero/Elements/flarp_folding_1/csvFiles/flarp_folding_1-_my_gen3_base_feedback.csv")
+# #reading the image csv
+# img_data = pd.read_csv("img_files.csv")
+#
+# #combining the data
+# complete_csv = img_data.merge(force_data, on = "date") # on what basis we want to merge the data?
+# complete_csv.to_csv("complete_files.csv", index = False)
+#
+# #reading the complete data
+# complete_data = pd.read_csv("/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/complete_files.csv")
+#
+# #cleaning the data
+# cleaned_data = autoclean(complete_data)
+
+# #appending the img and force info to one csv file
+# for index in clean_img_data.iloc[:]: #taking all the rows
+#     for header in clean_force_data.columns: #taking the force information's headers
+#         complete_data[header] = clean_force_data[index]
+#
+# complete_data.to_csv("complete_files.csv", index = False)
+#
+# csv_path = "/media/imero/Documents/F2V-Research/Trial-Model-Alvionna/"
+# csv_file = "complete_files2.csv"
+#
+# train_dataset = CSVDataset(csv_file=csv_file, root_dir=csv_path, transforms=transforms.Compose([Rescale((256,256)),ToTensor()]))
+#
+# train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
