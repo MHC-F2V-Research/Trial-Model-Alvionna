@@ -94,7 +94,7 @@ for data_path in glob.glob(vision_data_path + '/*'):
     vision_image_paths.append(glob.glob(data_path + '/*'))
 
 for data_path in glob.glob(force_data_path + '/*'):
-    force_data_paths.append(glob.glob(data_path + '/*'))
+    force_image_paths.append(glob.glob(data_path + '/*'))
 
 vision_image_paths = flatten(vision_image_paths)
 force_image_paths = flatten(force_image_paths)
