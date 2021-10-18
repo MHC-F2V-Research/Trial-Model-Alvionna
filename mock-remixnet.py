@@ -130,7 +130,7 @@ class FlarpDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return len(self.csv_file)
+        return len(self.img1_path)
 
     def __getitem__(self,idx):
         img1_name = self.img1_path[idx]
