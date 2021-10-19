@@ -26,6 +26,8 @@ import csv
 import sys
 import skimage
 
+from skimage import io, transform
+
 from datacleaner import autoclean
 #datacleaning -> datacleaner, prettypandas
 #pip install datacleaner
@@ -57,36 +59,41 @@ def blurring(directory_vision, directory_force):
             img_color = cv2.imread(os.path.join(directory_vision, file_vision))
             img_depth =  cv2.imread(os.path.join(directory_force, file_force))
 
-            cv2.blur(img_color, (n_avg1, n_avg2))
-            cv2.blur(img_depth, (n_avg1, n_avg2))
+            img_color_blur = cv2.blur(img_color, (n_avg1, n_avg2))
+            img_depth_blur = cv2.blur(img_depth, (n_avg1, n_avg2))
 
-            cv2.GaussianBlur(src = img_color, ksize = (n_gauss1, n_gauss2), sigmaX = decimal, sigmaY = decimal)
-            cv2.GaussianBlur(src = img_depth, ksize = (n_gauss1, n_gauss2), sigmaX = decimal, sigmaY = decimal)
+            # cv2.GaussianBlur(src = img_color, ksize = (n_gauss1, n_gauss2), sigmaX = decimal, sigmaY = decimal)
+            # cv2.GaussianBlur(src = img_depth, ksize = (n_gauss1, n_gauss2), sigmaX = decimal, sigmaY = decimal)
 
-            cv2.medianBlur(img_color, n_med)
-            cv2.medianBlur(img_depth, n_med)
+            # cv2.medianBlur(img_color, n_med)
+            # cv2.medianBlur(img_depth, n_med)
 
-            cv2.bilateralFilter(img_color, n_bil1, n_bil2, n_bil3)
-            cv2.bilateralFilter(img_depth, n_bil1, n_bil2, n_bil3)
+            # cv2.bilateralFilter(img_color, n_bil1, n_bil2, n_bil3)
+            # cv2.bilateralFilter(img_depth, n_bil1, n_bil2, n_bil3)
 
-            path_vision = "/media/imero/Elements/flarp_folding_1/mock_vision_blur_images"
+            #path_vision = "/media/imero/Elements/flarp_folding_1/mock_vision_blur_images"
+            path_vision = "/media/imero/Elements/flarp_folding_1/dummie_out"
             if not os.path.exists(path_vision):
                 os.makedirs(path_vision)
-            cv2.imwrite(os.path.join(path_vision,file_vision), img_color)
+            cv2.imwrite(os.path.join(path_vision,file_vision), img_color_blur)
 
-            path_force = "/media/imero/Elements/flarp_folding_1/mock_force_blur_images"
+            #path_force = "/media/imero/Elements/flarp_folding_1/mock_force_blur_images"
+            path_force = "/media/imero/Elements/flarp_folding_1/dummie_out"
             if not os.path.exists(path_force):
                 os.makedirs(path_force)
-            cv2.imwrite(os.path.join(path_force, file_force), img_depth)
+            cv2.imwrite(os.path.join(path_force, file_force), img_depth_blur)
 
-clear_vision = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
-clear_force = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
+#clear_vision = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
+#clear_force = '/media/imero/Elements/flarp_folding_1/kinova_color_images'
+clear_vision = '/media/imero/Elements/flarp_folding_1/dummie'
+clear_force = '/media/imero/Elements/flarp_folding_1/dummie'
 
 blurring(clear_vision, clear_force)
 
-vision_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
-force_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
-
+#vision_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
+#force_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
+vision_data_path = '/media/imero/Elements/flarp_folding_1/dummie_out' #vision_blur_images
+force_data_path = '/media/imero/Elements/flarp_folding_1/dummie_out' #force_blur_images
 if os.path.exists(vision_data_path):
     print("vision data path: true")
 else:
@@ -101,37 +108,47 @@ vision_image_paths = [] #to store image paths in list
 force_image_paths = []
 
 for data_path in glob.glob(vision_data_path + '/*'):
-    vision_image_paths.append(glob.glob(data_path + '/*'))
+    vision_image_paths.append(data_path)
+
 
 for data_path in glob.glob(force_data_path + '/*'):
-    force_image_paths.append(glob.glob(data_path + '/*'))
+    force_image_paths.append(data_path)
 
-vision_image_paths = flatten(vision_image_paths)
-force_image_paths = flatten(force_image_paths)
+#vision_image_paths = flatten(vision_image_paths)
+#force_image_paths = flatten(force_image_paths)
 
-vision_image_paths = vision_image_paths[:int(0.8*len(vision_image_paths))]
-force_image_paths = force_image_paths[:int(0.8*len(vision_image_paths))]
+# vision_image_paths = vision_image_paths[:int(0.8*len(vision_image_paths))]
+# force_image_paths = force_image_paths[:int(0.8*len(vision_image_paths))]
 
-validation_vision_paths = vision_image_paths[int(0.8*len(vision_image_paths)):]
-validation_force_paths = force_image_paths[int(0.8*len(vision_image_paths)):]
+# validation_vision_paths = vision_image_paths[int(0.8*len(vision_image_paths)):]
+# validation_force_paths = force_image_paths[int(0.8*len(vision_image_paths)):]
 
-vision_test_data = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images'
-force_test_data = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images'
+# vision_test_data = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images'
+# force_test_data = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images'
+vision_test_data = '/media/imero/Elements/flarp_folding_1/dummie_out'
+force_test_data = '/media/imero/Elements/flarp_folding_1/dummie_out'
 
 vision_test_paths = []
 force_test_paths = []
 
 for data_path in glob.glob(vision_test_data + '/*'):
-    vision_test_paths.append(glob.glob(vision_test_data + '/*'))
+    vision_test_paths.append(data_path )
 
 for data_path in glob.glob(force_test_data + '/*'):
-    force_test_paths.append(glob.glob(force_test_data + '/*'))
+    force_test_paths.append(data_path)
 
-vision_test_paths = vision_test_paths[:int(0.2*len(vision_image_paths))]
-force_test_paths = force_test_paths[:int(0.2*len(vision_image_paths))]
+# vision_test_paths = vision_test_paths[:int(0.2*len(vision_image_paths))]
+# force_test_paths = force_test_paths[:int(0.2*len(vision_image_paths))]
 
-vision_test_paths = flatten(vision_test_paths)
-force_test_paths = flatten(force_test_paths)
+# vision_test_paths = flatten(vision_test_paths)
+# force_test_paths = flatten(force_test_paths)
+
+# print(vision_image_paths)
+# print(force_image_paths)
+# # print(validation_vision_paths)
+# # print(validation_force_paths)
+# print(vision_test_paths)
+# print(force_test_paths)
 
 class FlarpDataset(Dataset):
     def __init__(self, img1_path, img2_path, transform=None):
@@ -223,23 +240,40 @@ class Rescale(object):
         self.output_size = output_size
 
     def __call__(self, sample):
-        image = sample['image']
+        force_image = sample['force_img']
+        vision_image = sample['vision_img']
 
-        height, width = image.shape[:2] #extracting height and width
+        Fheight, Fwidth = force_image.shape[:2] #extracting height and width
         if isinstance(self.output_size, int): # if the input is an int
-            if height > width:
-                new_height, new_width = self.output_size * height / width, self.output_size
+            if Fheight > Fwidth:
+                new_Fheight, new_Fwidth = self.output_size * Fheight / Fwidth, self.output_size
 				#maintaining the aspect ratio
             else:
-                new_height, new_width = self.output_size, self.output_size * width / height #maintaining the aspect ratio
+                new_Fheight, new_Fwidth = self.output_size, self.output_size * Fwidth / Fheight #maintaining the aspect ratio
         else:
-            new_height, new_width = self.output_size
+            new_Fheight, new_Fwidth = self.output_size
 
-        new_height, new_width = int(new_height), int(new_width)
+        new_Fheight, new_Fwidth = int(new_Fheight), int(new_Fwidth)
 
-        img = transforms.resize(image, (new_h, new_w))
+        Vheight, Vwidth = vision_image.shape[:2] #extracting height and width
+        if isinstance(self.output_size, int): # if the input is an int
+            if Vheight > Vwidth:
+                new_Vheight, new_Vwidth = self.output_size * Vheight / Vwidth, self.output_size
+                #maintaining the aspect ratio
+            else:
+                new_Vheight, new_Vwidth = self.output_size, self.output_size * Vwidth / Vheight #maintaining the aspect ratio
+        else:
+            new_Vheight, new_Vwidth = self.output_size
 
-        return img #return a dictionary - {'image': img}
+        new_Vheight, new_Vwidth = int(new_Vheight), int(new_Vwidth)
+
+
+        f_img = transform.resize(force_image, (new_Fheight, new_Fwidth))
+        v_img = transform.resize(vision_image, (new_Vheight, new_Vwidth))
+
+        total_result = {'rescale_force' : f_img, 'rescale_vision' : v_img}
+
+        return total_result #return a dictionary - {'image': img}
 
 
 class RandomCrop(object):
@@ -278,21 +312,23 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        image = sample['image']
+        force_image = sample['force_img']
+        vision_image = sample['vision_img']
 
         # swap color axis because
         # numpy image: H x W x C
         # torch image: C x H x W
-        image = image.transpose((2, 0, 1))
-        return {'image': torch.from_numpy(image)}
+        Fimage = force_image.transpose((2, 0, 1))
+        Vimage = vision_image.transpose((2, 0, 1))
+        return {'vision_image': torch.from_numpy(Vimage), 'force_image': torch.from_numpy(Fimage)}
 
 
 train_dataset = FlarpDataset(vision_image_paths, force_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
-validation_dataset = FlarpDataset(validation_vision_paths, validation_force_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
+# validation_dataset = FlarpDataset(validation_vision_paths, validation_force_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
 test_dataset = FlarpDataset(vision_test_paths, force_test_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
+# validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 # tensor -> (C,H,W)
@@ -359,7 +395,7 @@ class Generator(nn.Module):
             nn.BatchNorm2d(batch_size * 7 * 7),
             nn.Tanh(),
 
-            nn.View((7,7,batch_size)), #home-made, there's no reshape in pytorch, and we cannot use view in nn.sequential
+            View((7,7,batch_size)), #home-made, there's no reshape in pytorch, and we cannot use view in nn.sequential
             nn.Upsample((2,2), mode = 'nearest'), #mode = nearest, bilinear, bicubic and trilinear
             #nn.ConvTranspose2d(ngf * 2, ngf * 16, (5,5), 2, 1, bias False),
             nn.Conv2d(ngf * 16, ngf * 2, (5,5), stride=2, padding=1, bias=False),
@@ -367,7 +403,7 @@ class Generator(nn.Module):
             nn.Upsample((2,2), mode = 'nearest'), #mode = nearest, bilinear, bicubic and trilinear
             #nn.ConvTranspose2d(ngf * 2, ngf, (5,5), 2, 1, bias False),
 
-            nn.Conv2d(ngf, 1, stride=2, padding=1, bias=False),
+            nn.Conv2d(ngf, 1, (5,5), stride=2, padding=1, bias=False),
             nn.Tanh()
         )
 
@@ -400,11 +436,11 @@ class Discriminator(nn.Module):
             # input is (nc) x 64 x 64
             nn.Conv2d(nc, ndf, (5,5), 2, 1, bias=False),
             nn.Tanh(),
-            nn.MaxPool2D(kernel_size=(2,2)),
+            nn.MaxPool2d(kernel_size=(2,2)),
             # input is (ndf) x 128 x 128
             nn.Conv2d(ndf, ndf * 2, (5,5), 2, 1, bias=False),
             nn.Tanh(),
-            nn.MaxPool2D(kernel_size=(2,2)),
+            nn.MaxPool2d(kernel_size=(2,2)),
             nn.Flatten(),
             # input is (ndf * 2) and output is (ndf * 8) e ndf * 8 = 1024 if ndf = 64
             nn.Linear(ndf * 2, ndf * 8, bias = False),
@@ -450,7 +486,7 @@ class ContrastiveLoss(torch.nn.Module):
         return loss
 
 learning_rate = 0.0005
-beta_1 = 0.5
+beta1 = 0.5
 criterion_contrastive = ContrastiveLoss() #can use in-build loss functions, this one is for siamese network
 criterion_triplet = torch.nn.TripletMarginLoss(margin = 0.1, p=2) #p = the norm degree for pairwise distance
 criterion_GD = nn.BCELoss()
@@ -460,8 +496,8 @@ optimizerG = optim.Adam(generator.parameters(), lr=learning_rate, betas=(beta1, 
 optimizerD = optim.Adam(discriminator.parameters(), lr=learning_rate, betas=(beta1, 0.999), weight_decay=0.0005)
 optimizerE = optim.Adam(encoder.parameters(), lr=learning_rate, betas=(beta1, 0.999), weight_decay=0.0005)
 
-device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
-
+# device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 num_epochs = 1000
 
 
