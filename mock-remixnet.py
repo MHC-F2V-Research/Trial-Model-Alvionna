@@ -87,6 +87,16 @@ blurring(clear_vision, clear_force)
 vision_data_path = '/media/imero/Elements/flarp_folding_1/mock_vision_blur_images' #vision_blur_images
 force_data_path = '/media/imero/Elements/flarp_folding_1/mock_force_blur_images' #force_blur_images
 
+if os.path.exists(vision_data_path):
+    print("vision data path: true")
+else:
+    print("vision data path: false")
+
+if os.path.exists(force_data_path):
+    print("force data path: true")
+else:
+    print("force data path: false")
+
 vision_image_paths = [] #to store image paths in list
 force_image_paths = []
 
@@ -130,7 +140,7 @@ class FlarpDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return len(self.csv_file)
+        return len(self.img1_path)
 
     def __getitem__(self,idx):
         img1_name = self.img1_path[idx]
