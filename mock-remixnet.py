@@ -243,6 +243,7 @@ class Rescale(object):
         force_image = sample['force_img']
         vision_image = sample['vision_img']
 
+        #force resizing 
         Fheight, Fwidth = force_image.shape[:2] #extracting height and width
         if isinstance(self.output_size, int): # if the input is an int
             if Fheight > Fwidth:
@@ -255,6 +256,7 @@ class Rescale(object):
 
         new_Fheight, new_Fwidth = int(new_Fheight), int(new_Fwidth)
 
+        #vision resizing
         Vheight, Vwidth = vision_image.shape[:2] #extracting height and width
         if isinstance(self.output_size, int): # if the input is an int
             if Vheight > Vwidth:
@@ -271,9 +273,9 @@ class Rescale(object):
         f_img = transform.resize(force_image, (new_Fheight, new_Fwidth))
         v_img = transform.resize(vision_image, (new_Vheight, new_Vwidth))
 
-        total_result = {'rescale_force' : f_img, 'rescale_vision' : v_img}
+        sample = {'vision_img' : v_img, 'force_img' : f_img}
 
-        return total_result #return a dictionary - {'image': img}
+        return sample #return a dictionary - {'image': img}
 
 
 class RandomCrop(object):
