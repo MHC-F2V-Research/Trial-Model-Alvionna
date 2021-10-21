@@ -33,7 +33,7 @@ from datacleaner import autoclean
 #pip install datacleaner
 
 nsf = 32 #size of siamese feature map
-siamese_batch = 64
+siamese_batch = 3 #64
 batch_size = 128
 size_z = 100
 ngf = 64
@@ -273,7 +273,7 @@ class Rescale(object):
         f_img = transform.resize(force_image, (new_Fheight, new_Fwidth))
         v_img = transform.resize(vision_image, (new_Vheight, new_Vwidth))
 
-        sample = {'vision_img' : v_img, 'force_img' : f_img}
+        sample = {'vision_img' : v_img, 'force_img' : f_img, 'label' : 1}
 
         return sample #return a dictionary - {'image': img}
 
@@ -322,7 +322,7 @@ class ToTensor(object):
         # torch image: C x H x W
         Fimage = force_image.transpose((2, 0, 1))
         Vimage = vision_image.transpose((2, 0, 1))
-        return {'vision_image': torch.from_numpy(Vimage), 'force_image': torch.from_numpy(Fimage)}
+        return {'vision_image': torch.from_numpy(Vimage), 'force_image': torch.from_numpy(Fimage), 'label' : 1}
 
 
 train_dataset = FlarpDataset(vision_image_paths, force_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
@@ -351,10 +351,10 @@ class Encoder(nn.Module):
         super(Encoder,self).__init__()
         self.main = nn.Sequential(
             nn.BatchNorm2d(siamese_batch),
-            nn.Conv2d(siamese_batch, nsf, (2,2), stride=0, padding=1, bias=False),
+            nn.Conv2d(siamese_batch, nsf, (2,2), stride=1, padding=1, bias=False),
             nn.Tanh(),
 
-            nn.Conv2d(nsf, int(nsf/2), (5,5), stride=0, padding=1, bias=False),
+            nn.Conv2d(nsf, int(nsf/2), (5,5), stride=1, padding=1, bias=False),
             nn.Linear(int(nsf/2), nsf * 4, bias=False),
             nn.ReLU(),
 
@@ -364,6 +364,8 @@ class Encoder(nn.Module):
 
     #using the same architecture but having 2 inputs going through the same encoder
     def forward(self, input1, input2):
+        input1 = input1.float()
+        input2 = input2.float()
         # forward pass of input 1
         output1 = self.main(input1)
         # forward pass of input 2
@@ -516,7 +518,10 @@ def train():
             ###################
             # ENCODER TRAINING
             ###################
-            img0, img1 , label = data
+            img0, img1 , label = data['vision_image'], data['force_image'], data['label'] 
+            # print(img0)
+            # print(img1)
+            # print(label)
             img0, img1 , label = img0.cuda(), img1.cuda() , label.cuda()
             img0 = img0.view(img0.shape[0], -1)
             img1 = img1.view(img1.shape[0], -1)
