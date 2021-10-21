@@ -243,7 +243,7 @@ class Rescale(object):
         force_image = sample['force_img']
         vision_image = sample['vision_img']
 
-        #force resizing 
+        #force resizing
         Fheight, Fwidth = force_image.shape[:2] #extracting height and width
         if isinstance(self.output_size, int): # if the input is an int
             if Fheight > Fwidth:
@@ -518,6 +518,8 @@ def train():
             ###################
             img0, img1 , label = data
             img0, img1 , label = img0.cuda(), img1.cuda() , label.cuda()
+            img0 = img0.view(img0.shape[0], -1)
+            img1 = img1.view(img1.shape[0], -1)
             optimizerE.zero_grad()
             output1,output2 = encoder(img0,img1)
             loss_encoder = criterion_contrastive(output1,output2,label)
