@@ -325,9 +325,9 @@ class ToTensor(object):
         return {'vision_image': torch.from_numpy(Vimage), 'force_image': torch.from_numpy(Fimage), 'label' : 1}
 
 
-train_dataset = FlarpDataset(vision_image_paths, force_image_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
+train_dataset = FlarpDataset(vision_image_paths, force_image_paths, transform = transforms.Compose([transforms.Resize((256,256)), ToTensor()])) #Rescale((256,256))
 # validation_dataset = FlarpDataset(validation_vision_paths, validation_force_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
-test_dataset = FlarpDataset(vision_test_paths, force_test_paths, transform = transforms.Compose([Rescale((256,256)), ToTensor()]))
+test_dataset = FlarpDataset(vision_test_paths, force_test_paths, transform = transforms.Compose([transforms.Resize((256,256)), ToTensor()])) #Rescale((256,256))
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
 # validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size = batch_size, shuffle = True)
@@ -518,7 +518,7 @@ def train():
             ###################
             # ENCODER TRAINING
             ###################
-            img0, img1 , label = data['vision_image'], data['force_image'], data['label'] 
+            img0, img1 , label = data['vision_image'], data['force_image'], data['label']
             # print(img0)
             # print(img1)
             # print(label)
