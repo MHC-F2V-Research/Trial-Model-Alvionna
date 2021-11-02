@@ -39,6 +39,7 @@ size_z = 384054 #100
 ngf = 1 #64
 ndf = 64
 nc = 3 # rgb = 3, graysace = 1
+g_size_feature = 64
 
 def flatten(t):
     return [item for sublist in t for item in sublist]
@@ -391,28 +392,58 @@ class Encoder(nn.Module):
 #     model.add(Activation('tanh'))
 #     return model
 
+# class Generator(nn.Module):
+#     def __init__(self):
+#         super(Generator,self).__init__()
+#         self.main = nn.Sequential(
+#             nn.Linear(size_z, ngf, bias = False),
+#             nn.Tanh(),
+
+#             nn.Linear(ngf, 128 * 7 * 7, bias = False),
+#             #nn.BatchNorm2d(batch_size * 7 * 7),
+#             nn.Tanh(),
+
+#             View((1, 128, 7, 7)), #home-made, there's no reshape in pytorch, and we cannot use view in nn.sequential
+#             #nn.Upsample((2,2), mode = 'nearest'), #mode = nearest, bilinear, bicubic and trilinear
+#             #nn.ConvTranspose2d(ngf * 2, ngf * 16, (5,5), 2, 1, bias False),
+#             nn.Conv2d(128, ngf * 32, (5,5), stride=2, padding=1, bias=False),
+#             nn.Tanh(),
+#             #nn.Upsample((2,2), mode = 'nearest'), #mode = nearest, bilinear, bicubic and trilinear
+#             #nn.ConvTranspose2d(ngf * 2, ngf, (5,5), 2, 1, bias False),
+
+#             nn.Conv2d(ngf * 32, nc, (5,5), stride=2, padding=1, bias=False),
+#             # print("sdfasdfjkaslfhiuhei qhefh shjbdfjkab bhjf"),
+#             nn.Tanh()
+#         )
+
+#     def forward(self, input):
+#         return self.main(input)
+
 class Generator(nn.Module):
     def __init__(self):
-        super(Generator,self).__init__()
+        super(Generator, self).__init__()
+        #self.ngpu = ngpu
         self.main = nn.Sequential(
-            nn.Linear(size_z, ngf, bias = False),
-            nn.Tanh(),
-
-            nn.Linear(ngf, 128 * 7 * 7, bias = False),
-            #nn.BatchNorm2d(batch_size * 7 * 7),
-            nn.Tanh(),
-
-            View((1, 128, 7, 7)), #home-made, there's no reshape in pytorch, and we cannot use view in nn.sequential
-            #nn.Upsample((2,2), mode = 'nearest'), #mode = nearest, bilinear, bicubic and trilinear
-            #nn.ConvTranspose2d(ngf * 2, ngf * 16, (5,5), 2, 1, bias False),
-            nn.Conv2d(128, ngf * 32, (5,5), stride=2, padding=1, bias=False),
-            nn.Tanh(),
-            #nn.Upsample((2,2), mode = 'nearest'), #mode = nearest, bilinear, bicubic and trilinear
-            #nn.ConvTranspose2d(ngf * 2, ngf, (5,5), 2, 1, bias False),
-
-            nn.Conv2d(ngf * 32, nc, (5,5), stride=2, padding=1, bias=False),
-            # print("sdfasdfjkaslfhiuhei qhefh shjbdfjkab bhjf"),
+            # input is Z, going into a convolution
+            nn.ConvTranspose2d(size_z, g_size_feature * 8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(g_size_feature * 8),
+            nn.ReLU(True),
+            # state size. (g_size_feature*8) x 4 x 4
+            nn.ConvTranspose2d(g_size_feature * 8, g_size_feature * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(g_size_feature * 4),
+            nn.ReLU(True),
+            # state size. (g_size_feature*4) x 8 x 8
+            nn.ConvTranspose2d( g_size_feature * 4, g_size_feature * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(g_size_feature * 2),
+            nn.ReLU(True),
+            # state size. (g_size_feature*2) x 16 x 16
+            nn.ConvTranspose2d( g_size_feature * 2, g_size_feature, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(g_size_feature),
+            nn.ReLU(True),
+            # state size. (g_size_feature) x 32 x 32
+            nn.ConvTranspose2d( g_size_feature, nc, 4, 2, 1, bias=False),
             nn.Tanh()
+            # state size. (nc) x 64 x 64
         )
 
     def forward(self, input):
@@ -562,17 +593,19 @@ def train():
             print("output_encoder size = " + str(output_encoder.size()))
             optimizerD.zero_grad()
             output_encoder = output_encoder.view(output_encoder.shape[0], -1)
+            print("output_encoder size view =" + str(output_encoder.size()))
             fake_sample = generator(output_encoder)
             fake_label = torch.zeros(fake_sample.size(0), 1, device=device)
             print("fake sample size =" + str(fake_sample.size()))
             fake_preds = discriminator(fake_sample)
+            print("fake_preds size =" + str(fake_preds.size()))
             loss_discriminator_fake = criterion_GD(fake_preds, fake_label)
             loss_discriminator_fake.backward(retain_graph=True)
             D_x = fake_preds.mean().item()
 
             #train all-real
             real_label = torch.ones(output_encoder.size(0), 1, device=device)
-            output_encoder = output_encoder.reshape(1, 3, 506, 253)
+            output_encoder = output_encoder.reshape(1,3, 506, 253)
             print("output encoder size in discriminator training =" + str(output_encoder.size()))
             real_preds = discriminator(output_encoder) #what is the real image? we can use img0, img1
             loss_discriminator_real = criterion_GD(real_preds, real_label)
@@ -618,7 +651,17 @@ if __name__ == "__main__":
 #     writer.writerow([blur1 image"])
 #     for img in os.listdir(train_data_path):
 #       img_array = cv2.imread(os.path.join(train_data_path,img))
-#         img_array = blurring(img_array)
+#       img_array = blurring(img_array)
+#       img_array = (img_array.flatten())
+#       img_array = img_array.reshape(-1,1).T
+#       writer.writerow(img_array)
+#
+# with open('img2_files.csv', 'a') as f:
+#     writer = csv.writer(f)
+#     writer.writerow(["blur2 image"])
+#     for img in os.listdir(train_data_path):
+#       img_array = cv2.imread(os.path.join(train_data_path,img))
+#       img_array = blurring(img_array)
 #       img_array = (img_array.flatten())
 #       img_array = img_array.reshape(-1,1).T
 #       writer.writerow(img_array)
