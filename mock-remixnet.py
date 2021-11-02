@@ -40,6 +40,7 @@ ngf = 1 #64
 ndf = 64
 nc = 3 # rgb = 3, graysace = 1
 g_size_feature = 64
+d_size_feature = 64
 
 def flatten(t):
     return [item for sublist in t for item in sublist]
@@ -468,24 +469,51 @@ class Generator(nn.Module):
 #     model.add(Activation('sigmoid'))
 #     return model
 
+# class Discriminator(nn.Module):
+#     def __init__(self):
+#         super(Discriminator, self).__init__()
+#         self.main = nn.Sequential(
+#             # input is (nc) x 64 x 64
+#             nn.Conv2d(nc, ndf, (1,1), 2, 1, bias=False),
+#             nn.Tanh(),
+#             #nn.MaxPool2d(kernel_size=(2,2)),
+#             # input is (ndf) x 128 x 128
+#             nn.Conv2d(ndf, ndf * 2, (1,1), 2, 1, bias=False),
+#             nn.Tanh(),
+#             #nn.MaxPool2d(kernel_size=(2,2)),
+#             nn.Flatten(),
+#             # input is (ndf * 2) and output is (ndf * 8) e ndf * 8 = 1024 if ndf = 64
+#             nn.Linear(ndf * 8, ndf * 2, bias = False),
+#             nn.Tanh(),
+#             # input is (ndf * 8) and output is 1 where ndf * 8 = 1024 if ndf = 64
+#             nn.Linear(ndf * 2, 1, bias = False),
+#             nn.Sigmoid()
+#         )
+#
+#     def forward(self, input):
+#         return self.main(input)
+
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
         self.main = nn.Sequential(
             # input is (nc) x 64 x 64
-            nn.Conv2d(nc, ndf, (1,1), 2, 1, bias=False),
-            nn.Tanh(),
-            #nn.MaxPool2d(kernel_size=(2,2)),
-            # input is (ndf) x 128 x 128
-            nn.Conv2d(ndf, ndf * 2, (1,1), 2, 1, bias=False),
-            nn.Tanh(),
-            #nn.MaxPool2d(kernel_size=(2,2)),
-            nn.Flatten(),
-            # input is (ndf * 2) and output is (ndf * 8) e ndf * 8 = 1024 if ndf = 64
-            nn.Linear(ndf * 8, ndf * 2, bias = False),
-            nn.Tanh(),
-            # input is (ndf * 8) and output is 1 where ndf * 8 = 1024 if ndf = 64
-            nn.Linear(ndf * 2, 1, bias = False),
+            nn.Conv2d(nc, d_size_feature, 4, 2, 1, bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (d_size_feature) x 32 x 32
+            nn.Conv2d(d_size_feature, d_size_feature * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(d_size_feature * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (d_size_feature*2) x 16 x 16
+            nn.Conv2d(d_size_feature * 2, d_size_feature * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(d_size_feature * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (d_size_feature*4) x 8 x 8
+            nn.Conv2d(d_size_feature * 4, d_size_feature * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(d_size_feature * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (d_size_feature*8) x 4 x 4
+            nn.Conv2d(d_size_feature * 8, 1, 4, 1, 0, bias=False),
             nn.Sigmoid()
         )
 
